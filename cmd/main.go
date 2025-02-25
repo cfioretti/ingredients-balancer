@@ -1,26 +1,56 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net"
 	"os"
-	"strings"
+	"os/signal"
+	"syscall"
 
-	"github.com/spf13/viper"
+	"google.golang.org/grpc"
+
+	"github.com/cfioretti/ingredients-balancer/pkg/application"
+	grpcServer "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc"
+	pb "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc/proto/generated"
 )
 
+const defaultPort = ":50051"
+
 func main() {
-	configName := os.Getenv("CONFIG_NAME")
-	if configName == "" {
-		configName = "props"
-	}
-	viper.SetConfigName(configName)
+	port := getPort()
+	calculatorService := application.NewCalculatorService()
+	server := grpcServer.NewServer(calculatorService)
+	grpcInstance := grpc.NewServer()
 
-	viper.SetConfigType("yml")
-	viper.AddConfigPath("configs/")
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("failed to read properties config: %w", err))
+	pb.RegisterDoughCalculatorServer(grpcInstance, server)
+
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv()
+	go handleShutdown(grpcInstance)
+
+	log.Printf("Server listening on %s", port)
+	if err := grpcInstance.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+}
+
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		return defaultPort
+	}
+	return ":" + port
+}
+
+func handleShutdown(server *grpc.Server) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	<-sigCh
+	log.Println("Shutting down server...")
+	server.GracefulStop()
+	log.Println("Server stopped")
 }
