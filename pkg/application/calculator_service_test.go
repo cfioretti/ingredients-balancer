@@ -1,11 +1,12 @@
 package application
 
 import (
-	balancerdomain "github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"math"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	balancerdomain "github.com/cfioretti/ingredients-balancer/pkg/domain"
 )
 
 func TestTotalDoughWeightByPans(t *testing.T) {
@@ -91,7 +92,7 @@ func TestTotalDoughWeightByPans(t *testing.T) {
 		},
 	}
 
-	calculator := NewIngredientsCalculatorService()
+	calculator := NewCalculatorService()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

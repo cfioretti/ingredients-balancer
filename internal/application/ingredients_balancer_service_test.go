@@ -1,13 +1,13 @@
 package application
 
 import (
-	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	recipedomain "github.com/cfioretti/ingredients-balancer/internal/domain/recipe-manager"
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 )
 
 func TestBalance(t *testing.T) {
