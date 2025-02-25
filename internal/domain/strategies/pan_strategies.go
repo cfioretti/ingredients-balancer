@@ -3,9 +3,8 @@ package strategies
 import (
 	"errors"
 	"fmt"
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"math"
-
-	"github.com/cfioretti/ingredients-balancer/internal/domain"
 )
 
 type PanStrategy interface {

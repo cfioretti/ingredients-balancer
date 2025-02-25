@@ -3,8 +3,8 @@ package application
 import (
 	"errors"
 
-	"github.com/cfioretti/ingredients-balancer/internal/domain"
 	"github.com/cfioretti/ingredients-balancer/internal/domain/strategies"
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 )
 
 type DoughCalculatorService struct{}

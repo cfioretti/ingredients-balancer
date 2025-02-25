@@ -2,9 +2,9 @@ package application
 
 import (
 	"errors"
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"math"
 
-	"github.com/cfioretti/ingredients-balancer/internal/domain"
 	recipedomain "github.com/cfioretti/ingredients-balancer/internal/domain/recipe-manager"
 )
 

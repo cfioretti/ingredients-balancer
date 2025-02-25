@@ -18,5 +18,3 @@ type Measures struct {
 	Width    *int
 	Length   *int
 }
-
-type Strategy func(data map[string]string) Pan

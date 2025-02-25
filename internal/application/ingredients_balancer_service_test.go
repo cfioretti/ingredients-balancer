@@ -1,12 +1,12 @@
 package application
 
 import (
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cfioretti/ingredients-balancer/internal/domain"
 	recipedomain "github.com/cfioretti/ingredients-balancer/internal/domain/recipe-manager"
 )
 

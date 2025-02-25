@@ -1,11 +1,10 @@
 package strategies
 
 import (
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/cfioretti/ingredients-balancer/internal/domain"
 )
 
 func TestGetStrategy(t *testing.T) {
