@@ -35,7 +35,7 @@ func (s *RoundPanStrategy) Calculate(measures domain.Measures) (domain.Pan, erro
 
 	shape := "round"
 	radius := float64(*measures.Diameter) / 2
-	area := math.Pi * radius * radius
+	area := math.Round(math.Pi*radius*radius*100) / 100
 	name := fmt.Sprintf("%s %d cm", shape, *measures.Diameter)
 
 	return domain.Pan{

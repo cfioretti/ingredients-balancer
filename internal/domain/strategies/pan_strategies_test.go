@@ -45,7 +45,7 @@ func TestPanStrategies(t *testing.T) {
 			name:     "round 20 cm",
 			strategy: &RoundPanStrategy{},
 			measures: domain.Measures{Diameter: intPtr(20)},
-			wantArea: 314.1592653589793,
+			wantArea: 314.16,
 			wantErr:  false,
 		},
 		{
