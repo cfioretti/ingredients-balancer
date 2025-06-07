@@ -18,11 +18,11 @@ const defaultPort = ":50052"
 
 func main() {
 	port := getPort()
-	calculatorService := application.NewCalculatorService()
-	server := grpcServer.NewServer(calculatorService)
+	ingredientsBalancerService := application.NewIngredientsBalancerService()
+	server := grpcServer.NewServer(ingredientsBalancerService)
 	grpcInstance := grpc.NewServer()
 
-	pb.RegisterDoughCalculatorServer(grpcInstance, server)
+	pb.RegisterIngredientsBalancerServer(grpcInstance, server)
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

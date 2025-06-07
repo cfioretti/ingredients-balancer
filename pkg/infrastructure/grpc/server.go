@@ -3,82 +3,197 @@ package grpc
 import (
 	"context"
 
-	"github.com/cfioretti/ingredients-balancer/pkg/application"
+	"github.com/google/uuid"
+
 	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	pb "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc/proto/generated"
 )
 
-type Server struct {
-	pb.UnimplementedDoughCalculatorServer
-	calculatorService *application.DoughCalculatorService
+type IngredientsBalancerServiceInterface interface {
+	Balance(recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error)
 }
 
-func NewServer(calculatorService *application.DoughCalculatorService) *Server {
+type Server struct {
+	pb.UnimplementedIngredientsBalancerServer
+	ingredientsBalancerService IngredientsBalancerServiceInterface
+}
+
+func NewServer(ingredientsBalancerService IngredientsBalancerServiceInterface) *Server {
 	return &Server{
-		calculatorService: calculatorService,
+		ingredientsBalancerService: ingredientsBalancerService,
 	}
 }
 
-func (s *Server) TotalDoughWeightByPans(ctx context.Context, req *pb.PansRequest) (*pb.PansResponse, error) {
-	domainPans := toDomainPans(req.Pans)
+func (s *Server) Balance(ctx context.Context, req *pb.BalanceRequest) (*pb.BalanceResponse, error) {
+	recipe := toDomainRecipe(req.GetRecipe())
+	pans := toDomainPans(req.GetPans())
 
-	result, err := s.calculatorService.TotalDoughWeightByPans(domainPans)
+	result, err := s.ingredientsBalancerService.Balance(recipe, pans)
 	if err != nil {
 		return nil, err
 	}
 
-	responseProto := toProtoMessage(result)
+	responseProto := toProtoRecipeAggregate(result)
 
-	return &pb.PansResponse{
-		Pans: responseProto,
+	return &pb.BalanceResponse{
+		RecipeAggregate: responseProto,
 	}, nil
 }
 
-func toDomainPans(protoMessage *pb.PansProto) domain.Pans {
-	pans := make([]domain.Pan, 0, len(protoMessage.Pans))
+func toDomainRecipe(protoRecipe *pb.Recipe) domain.Recipe {
+	recipeUUID, _ := uuid.Parse(protoRecipe.Uuid)
 
-	for _, p := range protoMessage.Pans {
-		pan := domain.Pan{
-			Shape: p.Shape,
-			Measures: domain.Measures{
-				Diameter: toPointer(p.Measures.Diameter),
-				Edge:     toPointer(p.Measures.Edge),
-				Width:    toPointer(p.Measures.Width),
-				Length:   toPointer(p.Measures.Length),
-			},
-			Name: p.Name,
-			Area: p.Area,
-		}
-		pans = append(pans, pan)
-	}
-
-	return domain.Pans{
-		Pans:      pans,
-		TotalArea: protoMessage.TotalArea,
+	return domain.Recipe{
+		Id:          int(protoRecipe.Id),
+		Uuid:        recipeUUID,
+		Name:        protoRecipe.Name,
+		Description: protoRecipe.Description,
+		Author:      protoRecipe.Author,
+		Dough:       toDomainDough(protoRecipe.Dough),
+		Topping:     toDomainTopping(protoRecipe.Topping),
+		Steps:       toDomainSteps(protoRecipe.Steps),
 	}
 }
 
-func toProtoMessage(domainPans *domain.Pans) *pb.PansProto {
-	panProtos := make([]*pb.PanProto, 0, len(domainPans.Pans))
+func toDomainDough(protoDough *pb.Dough) domain.Dough {
+	return domain.Dough{
+		Name:             protoDough.Name,
+		PercentVariation: protoDough.PercentVariation,
+		Ingredients:      toDomainIngredients(protoDough.Ingredients),
+	}
+}
 
-	for _, p := range domainPans.Pans {
-		panProto := &pb.PanProto{
-			Shape: p.Shape,
-			Measures: &pb.MeasuresProto{
-				Diameter: fromPointer(p.Measures.Diameter),
-				Edge:     fromPointer(p.Measures.Edge),
-				Width:    fromPointer(p.Measures.Width),
-				Length:   fromPointer(p.Measures.Length),
+func toDomainTopping(protoTopping *pb.Topping) domain.Topping {
+	return domain.Topping{
+		Name:          protoTopping.Name,
+		ReferenceArea: protoTopping.ReferenceArea,
+		Ingredients:   toDomainIngredients(protoTopping.Ingredients),
+	}
+}
+
+func toDomainIngredients(protoIngredients []*pb.Ingredient) []domain.Ingredient {
+	ingredients := make([]domain.Ingredient, 0, len(protoIngredients))
+	for _, protoIngredient := range protoIngredients {
+		ingredients = append(ingredients, domain.Ingredient{
+			Name:   protoIngredient.Name,
+			Amount: protoIngredient.Amount,
+		})
+	}
+	return ingredients
+}
+
+func toDomainSteps(protoSteps *pb.Steps) domain.Steps {
+	steps := make([]domain.Step, 0, len(protoSteps.Steps))
+	for _, protoStep := range protoSteps.Steps {
+		steps = append(steps, domain.Step{
+			Id:          int(protoStep.Id),
+			StepNumber:  int(protoStep.StepNumber),
+			Description: protoStep.Description,
+		})
+	}
+	return domain.Steps{
+		RecipeId: int(protoSteps.RecipeId),
+		Steps:    steps,
+	}
+}
+
+func toDomainPans(protoPans *pb.Pans) domain.Pans {
+	pans := make([]domain.Pan, 0, len(protoPans.Pans))
+	for _, protoPan := range protoPans.Pans {
+		pans = append(pans, domain.Pan{
+			Shape: protoPan.Shape,
+			Measures: domain.Measures{
+				Diameter: toPointer(protoPan.Measures.Diameter),
+				Edge:     toPointer(protoPan.Measures.Edge),
+				Width:    toPointer(protoPan.Measures.Width),
+				Length:   toPointer(protoPan.Measures.Length),
 			},
-			Name: p.Name,
-			Area: p.Area,
-		}
-		panProtos = append(panProtos, panProto)
+			Name: protoPan.Name,
+			Area: protoPan.Area,
+		})
+	}
+	return domain.Pans{
+		Pans:      pans,
+		TotalArea: protoPans.TotalArea,
+	}
+}
+
+func toProtoRecipeAggregate(domainRecipeAggregate *domain.RecipeAggregate) *pb.RecipeAggregate {
+	return &pb.RecipeAggregate{
+		Recipe:           toProtoRecipe(domainRecipeAggregate.Recipe),
+		SplitIngredients: toProtoSplitIngredients(domainRecipeAggregate.SplitIngredients),
+	}
+}
+
+func toProtoRecipe(domainRecipe domain.Recipe) *pb.Recipe {
+	return &pb.Recipe{
+		Id:          int32(domainRecipe.Id),
+		Uuid:        domainRecipe.Uuid.String(),
+		Name:        domainRecipe.Name,
+		Description: domainRecipe.Description,
+		Author:      domainRecipe.Author,
+		Dough:       toProtoDough(domainRecipe.Dough),
+		Topping:     toProtoTopping(domainRecipe.Topping),
+		Steps:       toProtoSteps(domainRecipe.Steps),
+	}
+}
+
+func toProtoDough(domainDough domain.Dough) *pb.Dough {
+	return &pb.Dough{
+		Name:             domainDough.Name,
+		PercentVariation: domainDough.PercentVariation,
+		Ingredients:      toProtoIngredients(domainDough.Ingredients),
+	}
+}
+
+func toProtoTopping(domainTopping domain.Topping) *pb.Topping {
+	return &pb.Topping{
+		Name:          domainTopping.Name,
+		ReferenceArea: domainTopping.ReferenceArea,
+		Ingredients:   toProtoIngredients(domainTopping.Ingredients),
+	}
+}
+
+func toProtoIngredients(domainIngredients []domain.Ingredient) []*pb.Ingredient {
+	protoIngredients := make([]*pb.Ingredient, 0, len(domainIngredients))
+	for _, domainIngredient := range domainIngredients {
+		protoIngredients = append(protoIngredients, &pb.Ingredient{
+			Name:   domainIngredient.Name,
+			Amount: domainIngredient.Amount,
+		})
+	}
+	return protoIngredients
+}
+
+func toProtoSteps(domainSteps domain.Steps) *pb.Steps {
+	protoSteps := make([]*pb.Step, 0, len(domainSteps.Steps))
+	for _, domainStep := range domainSteps.Steps {
+		protoSteps = append(protoSteps, &pb.Step{
+			Id:          int32(domainStep.Id),
+			StepNumber:  int32(domainStep.StepNumber),
+			Description: domainStep.Description,
+		})
+	}
+	return &pb.Steps{
+		RecipeId: int32(domainSteps.RecipeId),
+		Steps:    protoSteps,
+	}
+}
+
+func toProtoSplitIngredients(domainSplitIngredients domain.SplitIngredients) *pb.SplitIngredients {
+	protoSplitDoughs := make([]*pb.Dough, 0, len(domainSplitIngredients.SplitDough))
+	for _, domainDough := range domainSplitIngredients.SplitDough {
+		protoSplitDoughs = append(protoSplitDoughs, toProtoDough(domainDough))
 	}
 
-	return &pb.PansProto{
-		Pans:      panProtos,
-		TotalArea: domainPans.TotalArea,
+	protoSplitToppings := make([]*pb.Topping, 0, len(domainSplitIngredients.SplitTopping))
+	for _, domainTopping := range domainSplitIngredients.SplitTopping {
+		protoSplitToppings = append(protoSplitToppings, toProtoTopping(domainTopping))
+	}
+
+	return &pb.SplitIngredients{
+		SplitDough:   protoSplitDoughs,
+		SplitTopping: protoSplitToppings,
 	}
 }
 
@@ -87,13 +202,5 @@ func toPointer(value *int32) *int {
 		return nil
 	}
 	val := int(*value)
-	return &val
-}
-
-func fromPointer(value *int) *int32 {
-	if value == nil {
-		return nil
-	}
-	val := int32(*value)
 	return &val
 }

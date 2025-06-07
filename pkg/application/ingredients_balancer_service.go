@@ -2,10 +2,9 @@ package application
 
 import (
 	"errors"
-	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 	"math"
 
-	rdomain "github.com/cfioretti/ingredients-balancer/internal/domain/recipe-manager"
+	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 )
 
 const totalPercentage = 100
@@ -16,7 +15,7 @@ func NewIngredientsBalancerService() *IngredientsBalancerService {
 	return &IngredientsBalancerService{}
 }
 
-func (bs IngredientsBalancerService) Balance(recipe rdomain.Recipe, pans domain.Pans) (*rdomain.RecipeAggregate, error) {
+func (bs IngredientsBalancerService) Balance(recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error) {
 	if pans.TotalArea <= 0 || getFirstIngredientAmount(recipe.Dough.Ingredients) <= 0 {
 		return nil, errors.New("invalid dough weight")
 	}
@@ -24,22 +23,22 @@ func (bs IngredientsBalancerService) Balance(recipe rdomain.Recipe, pans domain.
 	totalDoughWeight := pans.TotalArea / 2
 	doughPercentVariation := totalDoughWeight * recipe.Dough.PercentVariation / 100
 	doughConversionRatio := (totalDoughWeight + doughPercentVariation) / totalPercentage
-	balancedDough := rdomain.Dough{
+	balancedDough := domain.Dough{
 		PercentVariation: recipe.Dough.PercentVariation,
 		Ingredients:      balanceIngredients(recipe.Dough.Ingredients, doughConversionRatio),
 	}
 
 	toppingConversionRatio := pans.TotalArea / recipe.Topping.ReferenceArea
-	balancedTopping := rdomain.Topping{
+	balancedTopping := domain.Topping{
 		ReferenceArea: recipe.Topping.ReferenceArea,
 		Ingredients:   balanceIngredients(recipe.Topping.Ingredients, toppingConversionRatio),
 	}
 
-	recipeAggregate := &rdomain.RecipeAggregate{
+	recipeAggregate := &domain.RecipeAggregate{
 		Recipe: recipe,
-		SplitIngredients: rdomain.SplitIngredients{
+		SplitIngredients: domain.SplitIngredients{
 			SplitDough:   calculateSplitDoughs(balancedDough, pans),
-			SplitTopping: []rdomain.Topping{},
+			SplitTopping: []domain.Topping{},
 		},
 	}
 	recipeAggregate.Dough = balancedDough
@@ -48,15 +47,15 @@ func (bs IngredientsBalancerService) Balance(recipe rdomain.Recipe, pans domain.
 	return recipeAggregate, nil
 }
 
-func calculateSplitDoughs(totalDough rdomain.Dough, pans domain.Pans) []rdomain.Dough {
-	var splitDoughs []rdomain.Dough
+func calculateSplitDoughs(totalDough domain.Dough, pans domain.Pans) []domain.Dough {
+	var splitDoughs []domain.Dough
 
 	for _, pan := range pans.Pans {
 		ratio := pan.Area / pans.TotalArea
 
-		splitDough := rdomain.Dough{
+		splitDough := domain.Dough{
 			Name:        pan.Name,
-			Ingredients: make([]rdomain.Ingredient, len(totalDough.Ingredients)),
+			Ingredients: make([]domain.Ingredient, len(totalDough.Ingredients)),
 		}
 		splitDough.Ingredients = balanceIngredients(totalDough.Ingredients, ratio)
 
@@ -66,10 +65,10 @@ func calculateSplitDoughs(totalDough rdomain.Dough, pans domain.Pans) []rdomain.
 	return splitDoughs
 }
 
-func balanceIngredients(ingredients []rdomain.Ingredient, ratio float64) []rdomain.Ingredient {
-	balancedIngredients := make([]rdomain.Ingredient, len(ingredients))
+func balanceIngredients(ingredients []domain.Ingredient, ratio float64) []domain.Ingredient {
+	balancedIngredients := make([]domain.Ingredient, len(ingredients))
 	for i, ingredient := range ingredients {
-		balancedIngredients[i] = rdomain.Ingredient{
+		balancedIngredients[i] = domain.Ingredient{
 			Name:   ingredient.Name,
 			Amount: round(ingredient.Amount * ratio),
 		}
@@ -77,7 +76,7 @@ func balanceIngredients(ingredients []rdomain.Ingredient, ratio float64) []rdoma
 	return balancedIngredients
 }
 
-func getFirstIngredientAmount(ingredients []rdomain.Ingredient) float64 {
+func getFirstIngredientAmount(ingredients []domain.Ingredient) float64 {
 	if len(ingredients) == 0 {
 		return 0
 	}

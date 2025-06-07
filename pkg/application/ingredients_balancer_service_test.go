@@ -6,14 +6,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	rdomain "github.com/cfioretti/ingredients-balancer/internal/domain/recipe-manager"
 	"github.com/cfioretti/ingredients-balancer/pkg/domain"
 )
 
 func TestBalance(t *testing.T) {
 	tests := []struct {
 		name               string
-		recipe             rdomain.Recipe
+		recipe             domain.Recipe
 		pans               domain.Pans
 		totalDoughWeight   float64
 		totalToppingWeight float64
@@ -21,13 +20,13 @@ func TestBalance(t *testing.T) {
 	}{
 		{
 			name: "valid recipe and pans without percent variation",
-			recipe: rdomain.Recipe{
+			recipe: domain.Recipe{
 				Id:   1,
 				Uuid: uuid.New(),
 				Name: "Test Recipe",
-				Dough: rdomain.Dough{
+				Dough: domain.Dough{
 					PercentVariation: 0,
-					Ingredients: []rdomain.Ingredient{
+					Ingredients: []domain.Ingredient{
 						{Name: "flour", Amount: 55.7},
 						{Name: "water", Amount: 41.6},
 						{Name: "salt", Amount: 1.1},
@@ -35,9 +34,9 @@ func TestBalance(t *testing.T) {
 						{Name: "yeast", Amount: 0.5},
 					},
 				},
-				Topping: rdomain.Topping{
+				Topping: domain.Topping{
 					ReferenceArea: 1000,
-					Ingredients: []rdomain.Ingredient{
+					Ingredients: []domain.Ingredient{
 						{Name: "tomato", Amount: 300},
 						{Name: "mozzarella", Amount: 200},
 						{Name: "basil", Amount: 50},
@@ -64,13 +63,13 @@ func TestBalance(t *testing.T) {
 		},
 		{
 			name: "valid recipe and pans with percent variation",
-			recipe: rdomain.Recipe{
+			recipe: domain.Recipe{
 				Id:   1,
 				Uuid: uuid.New(),
 				Name: "Test Recipe",
-				Dough: rdomain.Dough{
+				Dough: domain.Dough{
 					PercentVariation: 10,
-					Ingredients: []rdomain.Ingredient{
+					Ingredients: []domain.Ingredient{
 						{Name: "flour", Amount: 55.7},
 						{Name: "water", Amount: 41.6},
 						{Name: "salt", Amount: 1.1},
@@ -78,9 +77,9 @@ func TestBalance(t *testing.T) {
 						{Name: "yeast", Amount: 0.5},
 					},
 				},
-				Topping: rdomain.Topping{
+				Topping: domain.Topping{
 					ReferenceArea: 1000,
-					Ingredients: []rdomain.Ingredient{
+					Ingredients: []domain.Ingredient{
 						{Name: "tomato", Amount: 300},
 						{Name: "mozzarella", Amount: 200},
 						{Name: "basil", Amount: 50},
@@ -107,9 +106,9 @@ func TestBalance(t *testing.T) {
 		},
 		{
 			name: "invalid total dough weight",
-			recipe: rdomain.Recipe{
-				Dough: rdomain.Dough{
-					Ingredients: []rdomain.Ingredient{
+			recipe: domain.Recipe{
+				Dough: domain.Dough{
+					Ingredients: []domain.Ingredient{
 						{Name: "flour", Amount: 55.7},
 					},
 				},
@@ -121,9 +120,9 @@ func TestBalance(t *testing.T) {
 		},
 		{
 			name: "empty ingredients",
-			recipe: rdomain.Recipe{
-				Dough: rdomain.Dough{
-					Ingredients: []rdomain.Ingredient{},
+			recipe: domain.Recipe{
+				Dough: domain.Dough{
+					Ingredients: []domain.Ingredient{},
 				},
 			},
 			pans: domain.Pans{
@@ -170,8 +169,8 @@ func TestBalance(t *testing.T) {
 
 func TestCalculateSplitDoughs(t *testing.T) {
 	t.Run("multiple pans with proportional weights", func(t *testing.T) {
-		totalDough := rdomain.Dough{
-			Ingredients: []rdomain.Ingredient{
+		totalDough := domain.Dough{
+			Ingredients: []domain.Ingredient{
 				{Name: "flour", Amount: 1000.0},
 				{Name: "water", Amount: 700.0},
 				{Name: "salt", Amount: 20.0},
@@ -202,8 +201,8 @@ func TestCalculateSplitDoughs(t *testing.T) {
 	})
 
 	t.Run("single pan", func(t *testing.T) {
-		totalDough := rdomain.Dough{
-			Ingredients: []rdomain.Ingredient{
+		totalDough := domain.Dough{
+			Ingredients: []domain.Ingredient{
 				{Name: "flour", Amount: 1000.0},
 				{Name: "water", Amount: 700.0},
 			},
@@ -225,8 +224,8 @@ func TestCalculateSplitDoughs(t *testing.T) {
 	})
 
 	t.Run("empty pans", func(t *testing.T) {
-		totalDough := rdomain.Dough{
-			Ingredients: []rdomain.Ingredient{
+		totalDough := domain.Dough{
+			Ingredients: []domain.Ingredient{
 				{Name: "flour", Amount: 1000.0},
 			},
 		}
