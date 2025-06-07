@@ -24,9 +24,9 @@ RUN apk --no-cache add ca-certificates tzdata
 
 COPY --from=builder /app/ingredients-balancer .
 
-EXPOSE 50051
+EXPOSE 50052
 
-ENV PORT=50051
+ENV PORT=50052
 
 RUN adduser -D -g '' appuser
 USER appuser

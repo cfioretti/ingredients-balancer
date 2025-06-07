@@ -14,7 +14,7 @@ import (
 	pb "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc/proto/generated"
 )
 
-const defaultPort = ":50051"
+const defaultPort = ":50052"
 
 func main() {
 	port := getPort()
