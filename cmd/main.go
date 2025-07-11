@@ -6,10 +6,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	"github.com/cfioretti/ingredients-balancer/internal/infrastructure/logging"
+	"github.com/cfioretti/ingredients-balancer/internal/infrastructure/tracing"
 	"github.com/cfioretti/ingredients-balancer/pkg/application"
 	grpcServer "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc"
 	pb "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc/proto/generated"
@@ -29,13 +32,26 @@ func main() {
 	ctx := context.Background()
 	logger.WithContext(ctx).Info("Starting ingredients-balancer service")
 
+	// Initialize tracing
+	if err := tracing.InitTracing(nil); err != nil {
+		logger.WithError(err).Fatal("Failed to initialize tracing")
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := tracing.ShutdownTracing(ctx); err != nil {
+			logger.WithError(err).Error("Failed to shutdown tracing")
+		}
+	}()
+
 	port := getPort()
 	logger.WithField("port", port).Info("Server configuration loaded")
 
-	ingredientsBalancerService := application.NewIngredientsBalancerService()
-	server := grpcServer.NewServer(ingredientsBalancerService)
+	balancerService := application.NewIngredientsBalancerService()
+	server := grpcServer.NewServer(balancerService)
 
 	grpcInstance := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.UnaryInterceptor(logger.GRPCUnaryInterceptor()),
 		grpc.StreamInterceptor(logger.GRPCStreamInterceptor()),
 	)
