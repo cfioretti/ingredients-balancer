@@ -1,104 +1,68 @@
-# Ingredients Balancer
+# Ingredients-Balancer Service
 
-This project implements a gRPC service for balancing ingredients in recipes based on pan sizes.
+**Ingredients-Balancer Service** - Part of PizzaMaker Microservices Architecture - A microservice for pizza ingredient balancing and optimization based on Domain-Driven Design (DDD) architecture with complete observability and monitoring.
 
-## Overview
+## Main Features
 
-The Ingredients Balancer service provides a `Balance` RPC method that takes a recipe and a set of pans as input, and returns a balanced recipe with ingredients adjusted according to the pan sizes.
+- **Ingredient Balancing**: Optimize ingredient distribution across multiple pizza pans
+- **Pan Optimization**: Distribute ingredients optimally based on pan sizes and quantities
+- **Business Metrics**: Collects domain-specific metrics (balancing accuracy, waste percentage, utilization)
 
-## Project Structure
+## Technologies
 
-- `cmd/main.go`: Entry point for the application
-- `pkg/application/ingredients_balancer_service.go`: Core business logic for balancing ingredients
-- `pkg/infrastructure/grpc/server.go`: gRPC server implementation
-- `pkg/infrastructure/grpc/proto/ingredients_balancer.proto`: Proto definition for the service
-- `test/ingredients_balancer_integration_test.go`: Integration tests for the service
+- **Go** - Primary language
+- **gRPC** - Service communication
+- **Prometheus** - Metrics and monitoring
+- **OpenTelemetry + Jaeger** - Distributed tracing
+- **Logrus** - Structured logging
+- **Docker** - Containerization
 
-## Prerequisites
+## Endpoints
 
-Before you can run the service, you need to install the Protocol Buffers compiler (protoc) and the Go plugins.
+### gRPC Services
+- **Port**: 50052 (configurable)
+- **Service**: `IngredientsBalancerServer`
+- **Methods**: 
+  - `Balance(BalanceRequest) -> BalanceResponse`
+  - `ValidateRecipe(ValidateRequest) -> ValidateResponse`
 
-### 1. Install Protocol Buffers Compiler (protoc)
+### HTTP Endpoints
+- **Port**: 8081 (configurable)
+- `GET /metrics` - Prometheus metrics
+- `GET /health` - Health check
 
-#### macOS (using Homebrew)
-```bash
-brew install protobuf
-```
+## Observability
 
-#### Linux (Ubuntu/Debian)
-```bash
-apt-get update
-apt-get install -y protobuf-compiler
-```
+### Structured Logging
+- **Correlation ID** for cross-service request tracking
+- **Structured JSON** for easy parsing
+- **Configurable levels** (Debug, Info, Warn, Error)
 
-#### Windows (using Chocolatey)
-```bash
-choco install protoc
-```
+### Distributed Tracing
+- **OpenTelemetry** for instrumentation
+- **Jaeger** for trace visualization
+- **Automatic spans** for gRPC operations
 
-Alternatively, you can download the pre-compiled binaries from the [Protocol Buffers GitHub releases page](https://github.com/protocolbuffers/protobuf/releases).
+### Prometheus Metrics
+The service exposes both **business** and **technical** metrics:
 
-### 2. Install Go Plugins
+#### Business Metrics
+- `ingredients_balancer_balance_operations_total` - Total balance operations by recipe type
+- `ingredients_balancer_balancing_accuracy` - Balancing accuracy percentage
+- `ingredients_balancer_ingredient_wastage_percentage` - Ingredient wastage percentage
+- `ingredients_balancer_pan_utilization_percentage` - Pan utilization efficiency
+- `ingredients_balancer_recipe_portions` - Number of recipe portions processed
+- `ingredients_balancer_optimization_strategies_total` - Optimization strategies used
+- `ingredients_balancer_quality_checks_total` - Quality validation checks
 
-You need to install two Go plugins for protoc:
+#### Technical Metrics
+- `ingredients_balancer_grpc_requests_total` - Total gRPC requests
+- `ingredients_balancer_grpc_request_duration_seconds` - gRPC request duration
+- `ingredients_balancer_active_grpc_connections` - Active gRPC connections
+- `ingredients_balancer_active_balance_operations` - Active balance operations
 
-```bash
-go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-```
-
-Make sure that your `$GOPATH/bin` directory is in your `$PATH`:
-
-```bash
-export PATH="$PATH:$(go env GOPATH)/bin"
-```
-
-## Generating the Proto Files
-
-Once you have installed the prerequisites, you can generate the proto files by running:
-
-```bash
-make proto
-```
-
-This will execute the following command defined in the Makefile:
-
-```bash
-protoc --go_out=. --go_opt=paths=source_relative \
-    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-    pkg/infrastructure/grpc/proto/ingredients_balancer.proto
-```
-
-The generated files will be placed in the `pkg/infrastructure/grpc/proto/generated` directory:
-
-1. `ingredients_balancer.pb.go`: Contains the Go structs for the messages defined in the proto file
-2. `ingredients_balancer_grpc.pb.go`: Contains the gRPC client and server interfaces
-
-## Running the Service
-
-After generating the proto files, you can run the service with:
-
-```bash
-make run
-```
-
-The service will listen on port 50052 by default, or on the port specified by the `PORT` environment variable.
-
-## Running Tests
-
-To run the tests, use:
-
-```bash
-make test
-```
-
-This will run both unit tests and integration tests to ensure that the gRPC service is working correctly.
-
-## Docker
-
-The project includes a Dockerfile that can be used to build and run the service in a container:
-
-```bash
-docker build -t ingredients-balancer -f deployments/Dockerfile .
-docker run -p 50052:50052 ingredients-balancer
-```
+#### Processing Metrics
+- `ingredients_balancer_ingredient_processing_total` - Ingredient processing operations
+- `ingredients_balancer_recipe_analysis_total` - Recipe analysis operations
+- `ingredients_balancer_pan_distributions_total` - Pan distribution operations
+- `ingredients_balancer_ingredient_optimizations_total` - Ingredient optimizations
