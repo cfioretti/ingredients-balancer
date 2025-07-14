@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"math"
 
@@ -15,7 +16,7 @@ func NewIngredientsBalancerService() *IngredientsBalancerService {
 	return &IngredientsBalancerService{}
 }
 
-func (bs IngredientsBalancerService) Balance(recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error) {
+func (bs IngredientsBalancerService) Balance(ctx context.Context, recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error) {
 	if pans.TotalArea <= 0 || getFirstIngredientAmount(recipe.Dough.Ingredients) <= 0 {
 		return nil, errors.New("invalid dough weight")
 	}

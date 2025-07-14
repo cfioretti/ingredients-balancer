@@ -9,16 +9,16 @@ import (
 	pb "github.com/cfioretti/ingredients-balancer/pkg/infrastructure/grpc/proto/generated"
 )
 
-type IngredientsBalancerServiceInterface interface {
-	Balance(recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error)
+type BalancerService interface {
+	Balance(context.Context, domain.Recipe, domain.Pans) (*domain.RecipeAggregate, error)
 }
 
 type Server struct {
 	pb.UnimplementedIngredientsBalancerServer
-	ingredientsBalancerService IngredientsBalancerServiceInterface
+	ingredientsBalancerService BalancerService
 }
 
-func NewServer(ingredientsBalancerService IngredientsBalancerServiceInterface) *Server {
+func NewServer(ingredientsBalancerService BalancerService) *Server {
 	return &Server{
 		ingredientsBalancerService: ingredientsBalancerService,
 	}
@@ -28,7 +28,7 @@ func (s *Server) Balance(ctx context.Context, req *pb.BalanceRequest) (*pb.Balan
 	recipe := toDomainRecipe(req.GetRecipe())
 	pans := toDomainPans(req.GetPans())
 
-	result, err := s.ingredientsBalancerService.Balance(recipe, pans)
+	result, err := s.ingredientsBalancerService.Balance(ctx, recipe, pans)
 	if err != nil {
 		return nil, err
 	}

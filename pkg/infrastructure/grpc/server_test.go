@@ -17,8 +17,8 @@ type MockIngredientsBalancerService struct {
 	mock.Mock
 }
 
-func (m *MockIngredientsBalancerService) Balance(recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error) {
-	args := m.Called(recipe, pans)
+func (m *MockIngredientsBalancerService) Balance(ctx context.Context, recipe domain.Recipe, pans domain.Pans) (*domain.RecipeAggregate, error) {
+	args := m.Called(ctx, recipe, pans)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -156,7 +156,7 @@ func TestServer_Balance_Success(t *testing.T) {
 		},
 	}
 
-	mockService.On("Balance", expectedDomainRecipe, expectedDomainPans).Return(mockResult, nil)
+	mockService.On("Balance", mock.AnythingOfType("*context.emptyCtx"), expectedDomainRecipe, expectedDomainPans).Return(mockResult, nil)
 
 	// Execute
 	response, err := server.Balance(context.Background(), protoRequest)
@@ -198,7 +198,7 @@ func TestServer_Balance_ServiceError(t *testing.T) {
 	}
 
 	expectedError := errors.New("servizio non disponibile")
-	mockService.On("Balance", mock.AnythingOfType("domain.Recipe"), mock.AnythingOfType("domain.Pans")).Return(nil, expectedError)
+	mockService.On("Balance", mock.AnythingOfType("*context.emptyCtx"), mock.AnythingOfType("domain.Recipe"), mock.AnythingOfType("domain.Pans")).Return(nil, expectedError)
 
 	// Execute
 	response, err := server.Balance(context.Background(), protoRequest)
